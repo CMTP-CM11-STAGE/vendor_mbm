@@ -98,12 +98,14 @@ int nmea_activate_port (int nmea_fd)
 
     ENTER;
 
+#if 0
     ret = writeline(nmea_fd, "AT*E2GPSNPD");
     if (ret < 0) {
         MBMLOGE("%s, error setting up port for nmea data", __FUNCTION__);
         EXIT;
         return -1;
     }
+#endif
 
     EXIT;
     return 0;

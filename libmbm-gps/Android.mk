@@ -18,7 +18,7 @@
 # Build MBM GPS implementation: gps.$(TARGET_DEVICE)
 #########################################################################
 
-ifeq ($(strip $(BOARD_USES_MBM_GPS)),true)
+ifeq ($(strip $(BOARD_USES_FAKE_GPS)),true)
 
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)

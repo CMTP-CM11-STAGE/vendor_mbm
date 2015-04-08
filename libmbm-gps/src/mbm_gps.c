@@ -666,7 +666,7 @@ static int epoll_deregister(int epoll_fd, int fd)
 
 static void onATReaderClosed(void)
 {
-    add_pending_command(CMD_AT_LOST);
+    // add_pending_command(CMD_AT_LOST);
 }
 
 static int safe_read(int fd, char *buf, int count)
@@ -754,6 +754,7 @@ int open_at_channel(void)
             MBMLOGW("%s, aborting because of cleanup", __FUNCTION__);
             return CLEANUP_REQUESTED;
         }
+#if 0
         at_fd = open(at_dev, O_RDWR | O_NONBLOCK);
         if (at_fd < 0) {
             MBMLOGD("%s, at_fd < 0, dev:%s, error:%s", __FUNCTION__, at_dev, strerror(errno));
@@ -761,8 +762,13 @@ int open_at_channel(void)
             sleep(1);
         } else
             break;
+#else
+		at_fd = -1;
+		break;
+#endif
     }
 
+#if 0
     if (strstr(at_dev, "/dev/ttyA")) {
         struct termios ios;
         MBMLOGD("%s, flushing device", __FUNCTION__);
@@ -799,6 +805,9 @@ int open_at_channel(void)
         return -1;
     } else
         return at_fd;
+#else
+	return at_fd;
+#endif
 }
 
 
@@ -814,7 +823,7 @@ static void main_loop(void *arg)
     char cmd = 255;
     char nmea[MAX_NMEA_LENGTH];
     int ret;
-    int at_fd;
+    int at_fd = -1;
     int nmea_fd = -1;
     int any_channel_lost;
     int i, at_dev, nmea_dev;
@@ -839,11 +848,13 @@ static void main_loop(void *arg)
         at_fd = open_at_channel();
         if (at_fd == CLEANUP_REQUESTED)
             goto exit;
+#if 0
         else if (at_fd < 0) {
             MBMLOGE("Error opening at channel. Retrying...");
             sleep(1);
             goto retry;
         }
+#endif
 
         ret = gpsctrl_open(at_fd, onATReaderClosed);
         if (ret < 0) {
@@ -859,6 +870,7 @@ static void main_loop(void *arg)
 
         gpsctrl_set_position_mode(context->pref_mode, 1);
 
+#if 0
         ret = gpsctrl_init_supl(context->allow_uncert, context->enable_ni);
         if (ret < 0)
             MBMLOGE("Error initing SUPL");
@@ -866,6 +878,7 @@ static void main_loop(void *arg)
         ret = gpsctrl_init_pgps();
         if (ret < 0)
             MBMLOGE("Error initing PGPS");
+#endif
 
         pthread_mutex_lock(&context->mutex);
         if (context->gps_should_start || context->gps_started) {
@@ -877,12 +890,14 @@ static void main_loop(void *arg)
         nmea_fd = gpsctrl_get_nmea_fd();
 
         epoll_register(epoll_fd, cmd_fd);
+#if 0
         epoll_register(epoll_fd, nmea_fd);
+#endif
 
         while (!any_channel_lost) {
-            struct epoll_event event[2];
+            struct epoll_event event[1];
             int nevents;
-            nevents = epoll_wait(epoll_fd, event, 2, -1);
+            nevents = epoll_wait(epoll_fd, event, 1, -1);
             if (nevents < 0 && errno != EINTR) {
                 MBMLOGE("epoll_wait() unexpected error for fd %d: %s. Retrying...",
                     epoll_fd, strerror(errno));
@@ -894,11 +909,13 @@ static void main_loop(void *arg)
             for (i=0; i<nevents; i++) {
                 if (((event[i].events & (EPOLLERR | EPOLLHUP)) != 0)) {
                     MBMLOGE("EPOLLERR or EPOLLHUP after epoll_wait(%x)!", event[i].events);
+#if 0
                     if (event[i].data.fd == nmea_fd) {
                         MBMLOGW("NMEA channel lost. Will try to recover.");
                         any_channel_lost = 1;
                         continue;
                     }
+#endif
                 }
 
                 if ((event[i].events & EPOLLIN) != 0) {
@@ -940,9 +957,11 @@ static void main_loop(void *arg)
                         default:
                             break;
                         }
+#if 0
                     } else if (fd == nmea_fd) {
                         nmea_read(nmea_fd, nmea);
                         nmea_received(nmea);
+#endif
                     } else
                         MBMLOGE("epoll_wait() returned unkown fd %d ?", fd);
                 } else
@@ -963,6 +982,7 @@ retry:
         /* Make sure devices is removed before trying to reopen
            otherwise we might end up in a race condition when
            devices is being removed from filesystem */
+#if 0
         i = TIMEOUT_DEVICE_REMOVED;
         do {
             sleep(1);
@@ -976,6 +996,7 @@ retry:
                 i--;
             }
         } while ((at_dev || nmea_dev) && i);
+#endif
     }
 
 exit:

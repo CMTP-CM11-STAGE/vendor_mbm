@@ -338,6 +338,7 @@ int gpsctrl_open (int at_fd, void (*onClose)(void))
     at_set_on_reader_closed(onClose);
     at_set_on_timeout(onATTimeout);
 
+#if 0
     if (at_handshake() < 0) {
         MBMLOGE("%s, at handshake failed", __FUNCTION__);
         EXIT;
@@ -358,10 +359,12 @@ int gpsctrl_open (int at_fd, void (*onClose)(void))
         EXIT;
         return -1;
     }
+#endif
 
     at_make_default_channel();
     at_set_timeout_msec(1000 * 180);
 
+#if 0
     /* initialize nmea channel */
     context->nmea_fd = nmea_open(context->nmea_dev);
     if (context->nmea_fd < 0) {
@@ -369,6 +372,9 @@ int gpsctrl_open (int at_fd, void (*onClose)(void))
         EXIT;
         return -1;
     }
+#else
+	context->nmea_fd = -1;
+#endif
 
     EXIT;
     return 0;
@@ -608,6 +614,7 @@ int gpsctrl_start(void)
         return -1;
     }
 
+#if 0
     if (mode == MODE_SUPL) {
         err = at_send_command("AT*E2GPSSTAT=1");
         if (err < 0)
@@ -617,6 +624,7 @@ int gpsctrl_start(void)
     err = at_send_command("AT*E2GPSCTL=%d,%d", mode, context->interval);
     if (err < 0)
         return -1;
+#endif
 
     MBMLOGI("GPS Started in mode: %d", mode);
     return 0;
@@ -646,6 +654,7 @@ int gpsctrl_stop(void)
      * e2gpsctl. Otherwise we can run into a
      * loop in onGpsStatusChange
      */
+#if 0
     err = at_send_command("AT*E2GPSSTAT=0");
 
     err = at_send_command("AT*E2GPSCTL=0");
@@ -654,6 +663,7 @@ int gpsctrl_stop(void)
         EXIT;
         return -1;
     }
+#endif
 
     EXIT;
     return 0;
@@ -715,7 +725,7 @@ void gpsctrl_set_is_connected (int connected)
     if (context->pref_mode == MODE_PGPS) {
         if (gpsctrl_get_device_is_ready()) {
             MBMLOGI("Setting eedata state to: %d", connected);
-            pgps_set_eedata(connected);
+            // pgps_set_eedata(connected);
         } else
             MBMLOGW("Not setting eedata since the device is not ready.");
     } else
