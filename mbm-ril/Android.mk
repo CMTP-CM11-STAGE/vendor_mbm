@@ -24,6 +24,8 @@
 # API Level 19 Android 4.4 KitKat
 #########################################################################
 
+ifeq ($(strip $(BOARD_USES_MBM_RIL)),true)
+
 API_ICS:= 14 15
 API_JB:= 16
 API_KK:= 19
@@ -65,7 +67,6 @@ endif
 # Author: Christian Bejram <christian.bejram@stericsson.com>
 #########################################################################
 
-ifeq ($(strip $(BOARD_USES_MBM_RIL)),true)
 
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
